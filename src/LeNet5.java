@@ -84,33 +84,39 @@ public class LeNet5 {
      * Convolves a 2D matrix with a 2D filter with a stride greater than 1
      * @param matrix - the 2D matrix representing an image
      * @param filter - the filter kernel
-     * @param stride - the stride of the convolution
+     * @param horizontalStride - the horizontal stride of the convolution
+     * @param verticalStride - the vertical stride of the convolution
      * @return - the double[][] array of the new image after convolution
      */
-    private double[][] convolveStride(double[][] matrix, double[][] filter, int stride){
-        int resultWidth = matrix.length - filter.length + 1;
-        int resultHeight = matrix[0].length - filter[0].length + 1;
+    private double[][] convolveStrided(double[][] matrix, double[][] filter, int horizontalStride, int verticalStride){
+        int resultWidth = (matrix.length - filter.length + horizontalStride)/horizontalStride;
+        int resultHeight = (matrix[0].length - filter[0].length + verticalStride)/verticalStride;
         double[][] output = new double[resultWidth][resultHeight];
 
         for(int i = 0; i < resultWidth; i++){
             for(int j = 0; j < resultHeight; j++){
-                output[i][j] = convolvePixel(matrix, filter, i, j);
+                output[i][j] = convolvePixel(matrix, filter, i*horizontalStride, j*verticalStride);
             }
         }
         return output;
     }
 
     public void testConvolution(){
-        double[][] matrix = { {0, 1, 2},
-                              {3, 4, 5},
-                              {6, 7, 8},
+        double[][] matrix = { {2, 3, 7, 4, 6, 2, 9},
+                              {6, 6, 9, 8, 7, 4, 3},
+                              {3, 4, 8, 3, 8, 9, 7},
+                              {7, 8, 3, 6, 6, 3, 4},
+                              {4, 2, 1, 8, 3, 4, 6},
+                              {3, 2, 4, 1, 9, 8, 3},
+                              {0, 1, 3, 9, 2, 1, 4}
                              };
 
-        double[][] filter = { {0, 1},
-                              {2, 3},
+        double[][] filter = { {3, 4, 4},
+                              {1, 0, 2},
+                              {-1, 0, 3}
                             };
 
-        double[][] convolvedMatrix = convolvePadded(matrix, filter, 4, 4);
+        double[][] convolvedMatrix = convolveStrided(matrix, filter, 2, 2);
         for(int i = 0; i < convolvedMatrix.length; i++){
             for(int j = 0; j < convolvedMatrix[i].length; j++){
                 System.out.print(convolvedMatrix[i][j] + " ");
@@ -119,10 +125,9 @@ public class LeNet5 {
         }
 
         System.out.println("\nDesired Output:");
-        System.out.println("0.0  3.0  8.0  4.0 ");
-        System.out.println("9.0  19.0 25.0 10.0");
-        System.out.println("21.0 37.0 43.0 16.0");
-        System.out.println("6.0  7.0  8.0  0.0 ");
+        System.out.println("91.0  100.0  83.0");
+        System.out.println("69.0  91.0  127.0");
+        System.out.println("44.0  72.0   74.0");
     }
 
 

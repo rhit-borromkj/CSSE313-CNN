@@ -10,7 +10,7 @@ public class MNISTCNN {
     public static void main(String[] args){
 //        testCNNetImage();
         LeNet5 net = new LeNet5();
-        net.testConvolution();
+        net.testPooling();
     }
 
     /**

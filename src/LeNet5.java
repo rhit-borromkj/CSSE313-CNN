@@ -101,6 +101,44 @@ public class LeNet5 {
         return output;
     }
 
+    /**
+     * Puts a set of matrices through a pooling function by summing the values of the matrix inside of the
+     * pooling grid, then multiplying by a trainable weight and adding a trainable bias, then using a
+     * sigmoid activation on the outcome. Used for the pooling layers of the CNN
+     * @param matrices - the set of matrices to be pooled
+     * @param poolingWeights - the trainable weights the sums are multiplied by
+     * @param biases - the trainable biases added to the multiplied sums
+     * @param poolWidth - the width of the pooling grid
+     * @param poolHeight - the height of the pooling grid
+     * @param stride - how many units over the pooling grid will move between iterations
+     * @return - the double[][][] set of pooled matrices
+     */
+    private double[][][] pool(double[][][] matrices, double[] poolingWeights, double[] biases, int poolWidth, int poolHeight, int stride){
+        int outputWidth = matrices[0].length / poolWidth;
+        int outputHeight = matrices[0][0].length / poolHeight;
+        double[][][] output = new double[matrices.length][outputWidth][outputHeight];
+
+        for(int m = 0; m < matrices.length; m++){
+            for(int i = 0; i < (matrices[m].length - poolWidth + stride)/stride; i++){
+                for(int j = 0; j < (matrices[m][i].length - poolHeight + stride)/stride; j++){
+                    //Sum all of the values in the embossed area on the matrix
+                    for(int k = 0; k < poolWidth; k++){
+                        for(int l = 0; l < poolHeight; l++){
+                            output[m][i][j] += matrices[m][i*stride+k][j*stride+l];
+                        }
+                    }
+                    //Multiply the sum by the pooled weight at that point
+                    output[m][i][j] = output[m][i][j] * poolingWeights[m] + biases[m];
+                }
+            }
+        }
+
+        return output;
+    }
+
+    /**
+     * Tests the network's convolution functionality
+     */
     public void testConvolution(){
         double[][] matrix = { {2, 3, 7, 4, 6, 2, 9},
                               {6, 6, 9, 8, 7, 4, 3},
@@ -130,5 +168,34 @@ public class LeNet5 {
         System.out.println("44.0  72.0   74.0");
     }
 
+    /**
+     * Tests the network's pooling functionality
+     */
+    public void testPooling(){
+        double[][][] matrices = { {{2, 2, 7, 3},
+                {9, 4, 6, 1},
+                {8, 5, 2, 4},
+                {3, 1, 2, 6}}
+        };
+
+        double[] poolingWeights = {1, 1, 1, 1, 1, 1};
+        double[] biases = {1, 1, 1, 1, 1, 1};
+
+        double[][][] pooledMatrices = pool(matrices, poolingWeights, biases, 2, 2, 2);
+
+        System.out.println("Output: ");
+        for(double[][] matrix : pooledMatrices){
+            for(int r = 0; r < matrix.length; r++){
+                for(int c = 0; c < matrix[0].length; c++){
+                    System.out.print(matrix[r][c] + " ");
+                }
+                System.out.println();
+            }
+        }
+
+        System.out.println("\nDesired Output:");
+        System.out.println("17.0  17.0");
+        System.out.println("17.0  14.0");
+    }
 
 }

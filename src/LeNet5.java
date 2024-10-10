@@ -15,7 +15,115 @@ public class LeNet5 {
         return 1 - activation * activation;
     }
 
-    private double[][] convolve(double[][] matrix, double[][] filter, int start, int stride){
-        return null;
+    /**
+     * Calculates a single output of the convolution
+     * @param matrix - the image to be filtered
+     * @param filter - the filter kernel
+     * @param x - the x position of the pixel
+     * @param y - the y position of the pixel
+     * @return - the double new pixel value of the convolution
+     */
+    private double convolvePixel(double[][] matrix, double[][] filter, int x, int y){
+        double output = 0;
+        for(int i = 0; i < filter.length; i++){
+            for(int j = 0; j < filter[i].length; j++){
+                output += (matrix[x+i][y+j]*filter[i][j]);
+            }
+        }
+        return output;
     }
+
+    /**
+     * Convolves a 2D matrix with a 2D filter without stride or padding
+     * @param matrix - the 2D matrix representing an image
+     * @param filter - the filter kernel
+     * @return - the double[][] array of the new image after convolution
+     */
+    private double[][] convolve(double[][] matrix, double[][] filter){
+        int resultWidth = matrix.length - filter.length + 1;
+        int resultHeight = matrix[0].length - filter[0].length + 1;
+        double[][] output = new double[resultWidth][resultHeight];
+
+        for(int i = 0; i < resultWidth; i++){
+            for(int j = 0; j < resultHeight; j++){
+               output[i][j] = convolvePixel(matrix, filter, i, j);
+            }
+        }
+        return output;
+    }
+
+    /**
+     * Convolves a 2D matrix with a 2D filter with padding
+     * @param matrix - the 2D matrix representing an image
+     * @param filter - the filter kernel
+     * @return - the double[][] array of the new image after convolution
+     */
+    private double[][] convolvePadded(double[][] matrix, double[][] filter, int outputWidth, int outputHeight){
+        int horizontalPadding = (outputWidth - matrix.length + filter.length - 1)/2;
+        int verticalPadding = (outputHeight - matrix[0].length + filter[0].length - 1)/2;
+        double[][] output = new double[outputWidth][outputHeight];
+
+        //Pad the matrix
+        double[][] paddedMatrix = new double[outputWidth + horizontalPadding][outputHeight + verticalPadding];
+        for(int i = 0; i < matrix.length; i++){
+            for(int j = 0; j < matrix[i].length; j++){
+                paddedMatrix[i + horizontalPadding][j + verticalPadding] = matrix[i][j];
+            }
+        }
+
+        //Convolve the matrix
+        for(int i = 0; i < outputWidth + horizontalPadding - filter.length + 1; i++){
+            for(int j = 0; j < outputHeight + horizontalPadding - filter[0].length + 1; j++){
+                output[i][j] = convolvePixel(paddedMatrix, filter, i, j);
+            }
+        }
+        return output;
+    }
+
+    /**
+     * Convolves a 2D matrix with a 2D filter with a stride greater than 1
+     * @param matrix - the 2D matrix representing an image
+     * @param filter - the filter kernel
+     * @param stride - the stride of the convolution
+     * @return - the double[][] array of the new image after convolution
+     */
+    private double[][] convolveStride(double[][] matrix, double[][] filter, int stride){
+        int resultWidth = matrix.length - filter.length + 1;
+        int resultHeight = matrix[0].length - filter[0].length + 1;
+        double[][] output = new double[resultWidth][resultHeight];
+
+        for(int i = 0; i < resultWidth; i++){
+            for(int j = 0; j < resultHeight; j++){
+                output[i][j] = convolvePixel(matrix, filter, i, j);
+            }
+        }
+        return output;
+    }
+
+    public void testConvolution(){
+        double[][] matrix = { {0, 1, 2},
+                              {3, 4, 5},
+                              {6, 7, 8},
+                             };
+
+        double[][] filter = { {0, 1},
+                              {2, 3},
+                            };
+
+        double[][] convolvedMatrix = convolvePadded(matrix, filter, 4, 4);
+        for(int i = 0; i < convolvedMatrix.length; i++){
+            for(int j = 0; j < convolvedMatrix[i].length; j++){
+                System.out.print(convolvedMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("\nDesired Output:");
+        System.out.println("0.0  3.0  8.0  4.0 ");
+        System.out.println("9.0  19.0 25.0 10.0");
+        System.out.println("21.0 37.0 43.0 16.0");
+        System.out.println("6.0  7.0  8.0  0.0 ");
+    }
+
+
 }

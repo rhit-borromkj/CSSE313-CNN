@@ -8,7 +8,9 @@ public class MNISTCNN {
      * @param args - String[]
      */
     public static void main(String[] args){
-        testCNNetImage();
+//        testCNNetImage();
+        LeNet5 net = new LeNet5();
+        net.testConvolution();
     }
 
     /**
@@ -18,20 +20,20 @@ public class MNISTCNN {
         int sectionLength = 60000; //Programmer determined: Only reads a certain number of numbers to avoid running out of memory
         //Read in the training data
         System.out.println("Parsing data...");
-        int[][] trainImages = readImage32x32("MNIST\\train-images-idx3-ubyte", sectionLength, 28*28);
+        double[][][] trainImages = readImage("MNIST\\train-images-idx3-ubyte", sectionLength, 28, 28);
         System.out.println("Images read. Reading labels...");
         double[] trainOutputs = readLabels("MNIST\\train-labels-idx1-ubyte", sectionLength);
         System.out.println("Labels read. Training data parsed.");
 
         //Train the network
-//        System.out.println("Training network...");
+        System.out.println("Training network...");
 //        LeNet5 net = new LeNet5();
 //        net.initNetwork(trainImages, trainOutputs);
 //        net.trainNetwork(10);
 
         //Read in the testing data
 //        System.out.println("Reading testing data...");
-        int[][] testImages = readImage32x32("MNIST\\t10k-images-idx3-ubyte", 10000, 28*28);
+        double[][][] testImages = readImage("MNIST\\t10k-images-idx3-ubyte", 10000, 28, 28);
         //Read the expected outputs
         double[] testOutputs = readLabels("MNIST\\t10k-labels-idx1-ubyte", 10000);
 
@@ -43,15 +45,17 @@ public class MNISTCNN {
 
     /**
      * Reads the MNIST images from the specified filepath. Reads only as many images
+     * Creates a 3D array of the images. The first index is the image number
      * as specified by sectionLength
      * @param filepath - String
      * @param sectionLength - int
-     * @param imageLength - int
+     * @param imageWidth - int
+     * @param imageHeight - int
      * @return the double[][] of un-padded MNIST images
      */
-    public static double[][] readImage(String filepath, int sectionLength, int imageLength){
+    public static double[][][] readImage(String filepath, int sectionLength, int imageWidth, int imageHeight){
         //Read the images
-        double[][] inputImages = new double[sectionLength][imageLength];
+        double[][][] inputImages = new double[sectionLength][imageWidth][imageHeight];
         File trainingFile = new File(filepath);
         BufferedInputStream inputFile;
         try{
@@ -62,55 +66,12 @@ public class MNISTCNN {
         }
         try{
             inputFile.skip(16);
-            for (int j = 0; j < inputImages.length; j++) {
-                for (int i = 0; i < imageLength; i++) {
-                    inputImages[j][i] = normalize(inputFile.read());
-                }
-            }
-            inputFile.close();
-            return inputImages;
-        }catch(IOException e){
-            System.err.println(e);
-            return null;
-        }
-    }
+            for (int i = 0; i < inputImages.length; i++) {
+                for (int r = 0; r < imageWidth; r++) {
+                    for(int c = 0; c < imageHeight; c++) {
+                        inputImages[i][r][c] = normalize(inputFile.read());
 
-    /**
-     * Reads the MNIST images from the specified filepath and pads them to be 32x32.
-     * Reads only as many images as specified by sectionLength
-     * @param filepath - String
-     * @param sectionLength - int
-     * @param imageSize - int
-     * @return the double[][] of size 32x32 MNIST images
-     */
-    public static int[][] readImage32x32(String filepath, int sectionLength, int imageSize){
-        //Read the images
-        int[][] inputImages = new int[sectionLength][32 * 32];
-        int edgeSize = 0;
-        double imageDimension = Math.sqrt(imageSize);
-        if(imageSize != (32*32)){
-            edgeSize = (int)((32 - imageDimension)/2);
-        }
-        int start = edgeSize * 32;
-
-        File trainingFile = new File(filepath);
-        BufferedInputStream inputFile;
-        try{
-            inputFile = new BufferedInputStream(new FileInputStream(trainingFile));
-        }catch(FileNotFoundException e){
-            System.err.println(e);
-            return null;
-        }
-        try{
-            inputFile.skip(16);
-            for (int j = 0; j < inputImages.length; j++) {
-                start = edgeSize * 32;
-                for(int r = 0; r < imageDimension; r++){
-                    start += edgeSize;
-                    for(int c = 0; c < imageDimension; c++){
-                        inputImages[j][start + c] = inputFile.read();
                     }
-                    start += (int)imageDimension + edgeSize;
                 }
             }
             inputFile.close();

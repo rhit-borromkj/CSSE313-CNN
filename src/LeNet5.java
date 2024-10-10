@@ -1,15 +1,44 @@
 public class LeNet5 {
-    double tanAmplitude = 1.7159;
-    double tanOriginSlope = (2/3.0);
+    private final double tanAmplitude = 1.7159;
+    private final double tanOriginSlope = (2/3.0);
+    private double trainingSetSize = 0;
+    private double learningRate = 0.1; 	// Programmer determined
+    private int inputSize = 28*28; 	// Fixed for now.
+    private double inputs[][][];
+    private double desiredOutputs[]; // Single desired output
+    private double[][] outputWeights;
+    private double[][] hiddenWeights;
+    private int hiddenLayerSize;
+    private int outputLayerSize;
 
 
+    /**
+     * The CNNet's activation function according to the paper found at
+     * https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=726791
+     * @param input - the input to the node
+     * @return - the activation of the node
+     */
     private double nodeActivation(double input){
         //Take the sigmoid of the input and multiply it by the slope at origin
-        double tanhInput = tanOriginSlope * (1/(1+Math.exp(-input)));
+        double tanhInput = tanOriginSlope * sigmoid(input);
         //The activation function is a tanh function multiplied by a programmer-specified amplitude
         return tanAmplitude * ((Math.exp(tanhInput)-Math.exp(-tanhInput))/(Math.exp(tanhInput)+Math.exp(-tanhInput)));
     }
 
+    /**
+     * A sigmoid activation function
+     * @param input - the input
+     * @return - the double sigmoid activation value
+     */
+    private double sigmoid(double input){
+        return 1/(1+Math.exp(-input));
+    }
+
+    /**
+     * The derivative of the tanh activation function
+     * @param activation - the activation value of the node
+     * @return - the double derivative of the activation
+     */
     private double derivative(double activation){
         //Based on the derivative of tanh: 1-(tanh^2)
         return 1 - activation * activation;
@@ -128,13 +157,16 @@ public class LeNet5 {
                         }
                     }
                     //Multiply the sum by the pooled weight at that point
-                    output[m][i][j] = output[m][i][j] * poolingWeights[m] + biases[m];
+                    output[m][i][j] = sigmoid(output[m][i][j] * poolingWeights[m] + biases[m]);
                 }
             }
         }
 
         return output;
     }
+
+
+
 
     /**
      * Tests the network's convolution functionality
@@ -169,7 +201,7 @@ public class LeNet5 {
     }
 
     /**
-     * Tests the network's pooling functionality
+     * Tests the network's pooling functionality (WITHOUT USING SIGMOID ON THE POOLING SUMS)
      */
     public void testPooling(){
         double[][][] matrices = { {{2, 2, 7, 3},

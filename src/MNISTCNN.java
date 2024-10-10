@@ -51,7 +51,7 @@ public class MNISTCNN {
      * @param sectionLength - int
      * @param imageWidth - int
      * @param imageHeight - int
-     * @return the double[][] of un-padded MNIST images
+     * @return the double[][][] of un-padded MNIST images
      */
     public static double[][][] readImage(String filepath, int sectionLength, int imageWidth, int imageHeight){
         //Read the images

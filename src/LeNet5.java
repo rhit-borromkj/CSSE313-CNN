@@ -6,11 +6,70 @@ public class LeNet5 {
     private int inputSize = 28*28; 	// Fixed for now.
     private double inputs[][][];
     private double desiredOutputs[]; // Single desired output
-    private double[][] outputWeights;
-    private double[][] hiddenWeights;
-    private int hiddenLayerSize;
-    private int outputLayerSize;
+    private final int filterWidth = 5; // Filter width for all convolution layers
+    private final int filterHeight = 5; // Filter height for all convolution layers
+    private final int c1Size = 6; // Programmer determined
+    private double[][][] c1Filters;
+    private double[] c1Biases;
+    private final int s2Size = 6; // Programmer determined
+    private double[] s2Weights;
+    private double[] s2Biases;
+    private final int c3Size = 16; // Programmer determined
+    private double[][][] c3Filters;
+    private double[] c3Biases;
+    private final int s4Size = 16; // Programmer determined
+    private double[] s4Weights;
+    private double[] s4Biases;
+    private final int c5Size = 120; // Programmer determined
+    private double[][][] c5Filters;
+    private double[] c5Weights;
+    private double[] c5Biases;
+    private final int f6Size = 84; // Programmer determined
+    private double[] f6Weights;
+    private double[] f6Biases;
+    private final int outputSize = 10; // Programmer determined
+    private double[] outputWeights;
 
+    /**
+     * Initializes the network on the given inputs and desired outputs
+     * @param inputs - double[][][]
+     * @param desiredOutputs - double[]
+     */
+    public void initNetwork(double[][][] inputs, double[] desiredOutputs) {
+        //Initialize the inputs and desired outputs
+        this.inputs = inputs;
+        this.trainingSetSize = inputs.length;
+        if (this.trainingSetSize == 0) {
+            System.out.println("No training data.");
+            System.exit(0);
+        }
+        this.desiredOutputs = desiredOutputs;
+
+        //Initialize all of the network's trainable parameters
+        this.c1Filters = new double[c1Size][filterWidth][filterHeight];
+        this.c1Biases = new double[c1Size];
+        this.s2Weights = new double[s2Size];
+        this.s2Biases = new double[s2Size];
+        this.c3Filters = new double[c3Size][filterWidth][filterHeight];
+        this.c3Biases = new double[c3Size];
+        this.s4Weights = new double[s4Size];
+        this.s4Biases = new double[s4Size];
+        this.c5Filters = new double[c5Size][filterWidth][filterHeight];
+        this.c5Weights = new double[c5Size];
+        this.c5Biases = new double[c5Size];
+        this.f6Weights = new double[f6Size * c5Size];
+        this.f6Biases = new double[f6Size];
+        this.outputWeights = new double[outputSize * f6Size];
+
+        //Initialize weights
+        for(int i = 0; i < c1Filters.length; i++) {
+            for(int j = 0; j < c1Filters[i].length; j++) {
+                for(int k = 0; k < c1Filters[i][j].length; k++) {
+                    this.c1Filters[i][j][k] = Math.random()*(2.4/inputSize + 1 - (-2.4/inputSize) + 2.4/inputSize);
+                }
+            }
+        }
+    }
 
     /**
      * The CNNet's activation function according to the paper found at
@@ -26,6 +85,16 @@ public class LeNet5 {
     }
 
     /**
+     * The derivative of the tanh activation function
+     * @param activation - the activation value of the node
+     * @return - the double derivative of the activation
+     */
+    private double derivative(double activation){
+        //Based on the derivative of tanh: 1-(tanh^2)
+        return 1 - activation * activation;
+    }
+
+    /**
      * A sigmoid activation function
      * @param input - the input
      * @return - the double sigmoid activation value
@@ -35,13 +104,16 @@ public class LeNet5 {
     }
 
     /**
-     * The derivative of the tanh activation function
-     * @param activation - the activation value of the node
-     * @return - the double derivative of the activation
+     * Activation function of the output layer
+     * @param input - all of the ACTIVATED INPUTS that go into the output layer
+     * @return - the output of this output node
      */
-    private double derivative(double activation){
-        //Based on the derivative of tanh: 1-(tanh^2)
-        return 1 - activation * activation;
+    private double outputActivation(double[] input){
+        double output = 0;
+        for(int i = 0; i < input.length; i++){
+            output += Math.pow((input[i] * outputWeights[i]),2);
+        }
+        return output;
     }
 
     /**
@@ -165,8 +237,20 @@ public class LeNet5 {
         return output;
     }
 
-
-
+    /**
+     * Converts the solution parameter into a binary encoding, where the value at the
+     * solution parameter index is 1, and the rest of the encoding is all 0.
+     *
+     * For example: The encoding for 5 is {0,0,0,0,0,1,0,0,0,0}
+     * @param solution - double (gets cast to an int)
+     * @return double[] the binary encoding
+     */
+    public double[] binaryEncodeSolution(double solution){
+        double[] binaryDesiredOutput = new double[outputSize];
+        int solutionLocation = (int)solution;
+        binaryDesiredOutput[solutionLocation] = 1;
+        return binaryDesiredOutput;
+    }
 
     /**
      * Tests the network's convolution functionality

@@ -12,13 +12,13 @@ public class PixelGrid extends JPanel {
         grid = new BufferedImage(width*PIXEL_SIZE, height*PIXEL_SIZE, BufferedImage.TYPE_BYTE_GRAY);
     }
 
-    public void setPixel(int color, int x, int y) {
+    public void setPixel(double color, int x, int y) {
         color = 255-color;
         x = convertGridIndexToActual(x);
         y = convertGridIndexToActual(y);
         for(int i = 0; i<PIXEL_SIZE; i++) {
             for(int j = 0; j<PIXEL_SIZE; j++) {
-                grid.setRGB((x + i)%grid.getWidth(), (y+ j) % grid.getHeight() , (int)(color << 16 | color << 8 | color));
+                grid.setRGB((x + i)%grid.getWidth(), (y+ j) % grid.getHeight() , ((int)color << 16 | (int)color << 8 | (int)color));
             }
         }
     }

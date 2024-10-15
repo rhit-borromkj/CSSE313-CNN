@@ -8,16 +8,14 @@ public class MNISTCNN {
      * @param args - String[]
      */
     public static void main(String[] args){
-//        testCNNetImage();
-        LeNet5 net = new LeNet5();
-        net.testPooling();
+        testCNNetImage();
     }
 
     /**
      * Trains and tests the LeNet5 CNNet on the MNIST dataset
      */
     public static void testCNNetImage(){
-        int sectionLength = 60000; //Programmer determined: Only reads a certain number of numbers to avoid running out of memory
+        int sectionLength = 60; //Programmer determined: Only reads a certain number of numbers to avoid running out of memory
         //Read in the training data
         System.out.println("Parsing data...");
         double[][][] trainImages = readImage("MNIST\\train-images-idx3-ubyte", sectionLength, 28, 28);
@@ -27,15 +25,15 @@ public class MNISTCNN {
 
         //Train the network
         System.out.println("Training network...");
-//        LeNet5 net = new LeNet5();
-//        net.initNetwork(trainImages, trainOutputs);
-//        net.trainNetwork(10);
+        LeNet5 net = new LeNet5();
+        net.initNetwork(trainImages, trainOutputs);
+        net.testNetworkSimple();
 
         //Read in the testing data
 //        System.out.println("Reading testing data...");
-        double[][][] testImages = readImage("MNIST\\t10k-images-idx3-ubyte", 10000, 28, 28);
+//        double[][][] testImages = readImage("MNIST\\t10k-images-idx3-ubyte", 10000, 28, 28);
         //Read the expected outputs
-        double[] testOutputs = readLabels("MNIST\\t10k-labels-idx1-ubyte", 10000);
+//        double[] testOutputs = readLabels("MNIST\\t10k-labels-idx1-ubyte", 10000);
 
         //Test the network
 //        System.out.println("Testing network...");
@@ -124,39 +122,4 @@ public class MNISTCNN {
         return pixel/255.0;
     }
 
-    /**
-     * Uses the PixelGrid class to display the image read from the
-     * MNIST data set
-     * @param image - int[]
-     */
-    public static void displayImage(int[]image, int size) {
-        JFrame window = new JFrame("image");
-        int width = size;
-        int height = size;
-        window.setSize((width+2)*16, (height+2)*16 + 20);
-        PixelGrid pGrid = drawImage(image, width, height);
-        window.add(pGrid);
-        window.setVisible(true);
-        window.repaint();
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
-
-    /**
-     * Helper method for displayImage that draws the image on the
-     * PixelGrid
-     * @param image - int[]
-     * @param width - int
-     * @param height - int
-     * @return grid the PixelGrid representation of the image
-     */
-    public static PixelGrid drawImage(int[] image, int width, int height) {
-        PixelGrid grid = new PixelGrid(width, height);
-        int c = 0;
-        for(int i = 0; i<width; i++) {
-            for(int j = 0; j<height; j++) {
-                grid.setPixel(image[c++],j,i);
-            }
-        }
-        return grid;
-    }
 }

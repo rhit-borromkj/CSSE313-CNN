@@ -122,4 +122,74 @@ public class MNISTCNN {
         return pixel/255.0;
     }
 
+    /**
+     * Uses the PixelGrid class to display the 1D image read from the
+     * MNIST data set
+     * @param image - int[]
+     */
+    public static void displayImage(double[]image, int size, String name) {
+        JFrame window = new JFrame(name);
+        int width = size > 40 ? 40 : size;
+        window.setSize((width+2)*16, 100);
+        PixelGrid pGrid = drawImage(image, width, 1);
+        window.add(pGrid);
+        window.setVisible(true);
+        window.repaint();
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    /**
+     * Uses the PixelGrid class to display the 2D image read from the
+     * MNIST data set
+     * @param image - int[][]
+     * @param size - the width/height of the image (assumes the image is square)
+     */
+    public static void displayImage(double[][]image, int size, String name) {
+        JFrame window = new JFrame(name);
+        window.setSize((size+2)*16, (size+2)*16 + 20);
+        PixelGrid pGrid = drawImage(image, size, size);
+        window.add(pGrid);
+        window.setVisible(true);
+        window.repaint();
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    /**
+     * Helper method for displayImage that draws the 1D image on the
+     * PixelGrid
+     * @param image - int[]
+     * @param width - int
+     * @param height - int
+     * @return grid the PixelGrid representation of the image
+     */
+    public static PixelGrid drawImage(double[] image, int width, int height) {
+        PixelGrid grid = new PixelGrid(width, height);
+        int c = 0;
+        for(int i = 0; i<width; i++) {
+            for(int j = 0; j<height; j++) {
+                grid.setPixel(image[c++]*255,j,i);
+            }
+        }
+        return grid;
+    }
+
+    /**
+     * Helper method for displayImage that draws the 2D image on the
+     * PixelGrid
+     * @param image - int[][]
+     * @param width - int
+     * @param height - int
+     * @return grid the PixelGrid representation of the image
+     */
+    public static PixelGrid drawImage(double[][] image, int width, int height) {
+        PixelGrid grid = new PixelGrid(width, height);
+        int c = 0;
+        for(int i = 0; i<width; i++) {
+            for(int j = 0; j<height; j++) {
+                grid.setPixel(image[i][j]*255,j,i);
+            }
+        }
+        return grid;
+    }
+
 }

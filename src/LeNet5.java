@@ -35,7 +35,7 @@ public class LeNet5 {
     private double[] c5Weights;
     private double[] c5Biases;
     private final int f6Size = 84; // Programmer determined
-    private double[] f6Weights;
+    private double[][] f6Weights;
     private double[] f6Biases;
     private final int outputSize = 10; // Programmer determined
     private double[][] outputWeights;
@@ -67,7 +67,7 @@ public class LeNet5 {
         this.c5Filters = new double[c5Size][filterWidth][filterHeight];
         this.c5Weights = new double[c5Size];
         this.c5Biases = new double[c5Size];
-        this.f6Weights = new double[f6Size * c5Size];
+        this.f6Weights = new double[f6Size][c5Size];
         this.f6Biases = new double[f6Size];
         this.outputWeights = new double[outputSize][f6Size];
 
@@ -85,13 +85,19 @@ public class LeNet5 {
 //        initializeWeights(this.c5Biases, s4Size);
 //        initializeWeights(this.f6Weights, c5Size);
 //        initializeWeights(this.f6Biases, c5Size);
-//        initializeWeights(this.outputWeights);
+//        initializeOutputWeights(this.outputWeights);
     }
 
+    /**
+     * Does a simple test of the network using set weights and no activation functions
+     * to demonstrate the functionality. To make things easier to call, the
+     * displayImage methods are in this class, but these will be removed
+     * for Milestone 2
+     */
     public void testNetworkSimple(){
         initializeTestWeightsSimple();
         double[] binaryDesiredOutput = binaryEncodeSolution(desiredOutputs[0]);
-        displayImage(inputs[0], 28, "input");
+        displayImage(inputs[0], 28, "Input");
 
         //C1
         double[][][] c1 = new double[c1Size][c1Width][c1Height];
@@ -155,6 +161,35 @@ public class LeNet5 {
         //S4: Pooling of the 16 matrices from C3 into 16 5x5 matrices using 2x2 filters with 2-bit stride
         double[][][] s4 = pool(c3, s4Weights, s4Biases, 2, 2, 2);
         displayImage(s4[0], 5, "S4");
+
+        //C5
+        double[] c5 = new double[c5Size];
+        for(int f = 0; f < c5Size; f++){
+            for(int s = 0; s < s4Size; s++){
+                c5[f] += convolvePixel(s4[s], c5Filters[f], 0, 0);
+            }
+            c5[f] = c5[f] * c5Weights[f] + c5Biases[f];
+        }
+        displayImage(c5, 120, "C5");
+
+        //F6
+        double[] f6 = new double[f6Size];
+        for(int h = 0; h < f6Size; h++){
+            for(int n = 0; n < c5Size; n++){
+                f6[h] += c5[n] * f6Weights[h][n];
+            }
+            f6[h] += f6Biases[h];
+        }
+        displayImage(f6, 84, "F6");
+
+        //Output
+        double[] output = new double[outputSize];
+        for(int o = 0; o < outputSize; o++){
+            for(int h = 0; h < f6Size; h++){
+                output[o] += f6[h] * outputWeights[o][h];
+            }
+        }
+        displayImage(output, 10, "Output");
     }
 
     /**
@@ -198,9 +233,9 @@ public class LeNet5 {
                     for(int i = 0; i < c3Width; i++){
                         for(int j = 0; j < c3Height; j++){
                             c3[f][i][j] = convolvePixel(s2[f%s2Size], c3Filters[f], i, j)
-                                            + convolvePixel(s2[(f+1)%s2Size], c3Filters[f], i, j)
-                                            + convolvePixel(s2[(f+2)%s2Size], c3Filters[f], i, j)
-                                            + c3Biases[f];
+                                    + convolvePixel(s2[(f+1)%s2Size], c3Filters[f], i, j)
+                                    + convolvePixel(s2[(f+2)%s2Size], c3Filters[f], i, j)
+                                    + c3Biases[f];
                         }
                     }
                 }
@@ -209,10 +244,10 @@ public class LeNet5 {
                     for(int i = 0; i < c3Width; i++){
                         for(int j = 0; j < c3Height; j++){
                             c3[f][i][j] = convolvePixel(s2[(f-6)%s2Size], c3Filters[f], i, j)
-                                          + convolvePixel(s2[(f-5)%s2Size], c3Filters[f], i, j)
-                                          + convolvePixel(s2[(f-4)%s2Size], c3Filters[f], i, j)
-                                          + convolvePixel(s2[(f-3)%s2Size], c3Filters[f], i, j)
-                                          + c3Biases[f];
+                                    + convolvePixel(s2[(f-5)%s2Size], c3Filters[f], i, j)
+                                    + convolvePixel(s2[(f-4)%s2Size], c3Filters[f], i, j)
+                                    + convolvePixel(s2[(f-3)%s2Size], c3Filters[f], i, j)
+                                    + c3Biases[f];
                         }
                     }
                 }
@@ -221,10 +256,10 @@ public class LeNet5 {
                     for(int i = 0; i < c3Width; i++){
                         for(int j = 0; j < c3Height; j++){
                             c3[f][i][j] = convolvePixel(s2[(f-12)%s2Size], c3Filters[f], i, j)
-                                          + convolvePixel(s2[(f-11)%s2Size], c3Filters[f], i, j)
-                                          + convolvePixel(s2[(f-9)%s2Size], c3Filters[f], i, j)
-                                          + convolvePixel(s2[(f-8)%s2Size], c3Filters[f], i, j)
-                                          + c3Biases[f];
+                                    + convolvePixel(s2[(f-11)%s2Size], c3Filters[f], i, j)
+                                    + convolvePixel(s2[(f-9)%s2Size], c3Filters[f], i, j)
+                                    + convolvePixel(s2[(f-8)%s2Size], c3Filters[f], i, j)
+                                    + c3Biases[f];
                         }
                     }
                 }
@@ -243,10 +278,28 @@ public class LeNet5 {
                 //C5: Convolution of 16 matrices from S4 into a single 120-node array using 16 5x5 filters and 120 additional weights
                 double[] c5 = new double[c5Size];
                 for(int f = 0; f < c5Size; f++){
-
+                    for(int s = 0; s < s4Size; s++){
+                        c5[f] += convolvePixel(s4[s], c5Filters[f], 0, 0);
+                    }
+                    c5[f] = c5[f] * c5Weights[f] + c5Biases[f];
                 }
 
+                //F6: Feed-forward fully connected hidden layer with 120 inputs, 84 hidden weights per input, and 84 biases
+                double[] f6 = new double[f6Size];
+                for(int h = 0; h < f6Size; h++){
+                    for(int n = 0; n < c5Size; n++){
+                        f6[h] += c5[n] * f6Weights[h][n];
+                    }
+                    f6[h] += f6Biases[h];
+                }
 
+                //Output: Feed-forward fully connected output layer with 84 inputs, 10 weights per input
+                double[] output = new double[outputSize];
+                for(int o = 0; o < outputSize; o++){
+                    for(int h = 0; h < f6Size; h++){
+                        output[o] += f6[h] * outputWeights[o][h];
+                    }
+                }
             }
             System.out.println("Epoch " + (e+1) + " completed.");
         }
@@ -262,7 +315,7 @@ public class LeNet5 {
      * @param input - the input to the node
      * @return - the activation of the node
      */
-    private double nodeActivation(double input){
+    private double tanh(double input){
         //Take the sigmoid of the input and multiply it by the slope at origin
         double tanhInput = tanOriginSlope * sigmoid(input);
         //The activation function is a tanh function multiplied by a programmer-specified amplitude
@@ -310,26 +363,6 @@ public class LeNet5 {
     }
 
     /**
-     * Convolves a 2D matrix with a 2D filter without stride or padding
-     * @param matrix - the 2D matrix representing an image
-     * @param filter - the filter kernel
-     * @param bias - the trainable bias associated with the convolution
-     * @return - the double[][] array of the new image after convolution
-     */
-    private double[][] convolve(double[][] matrix, double[][] filter, double bias){
-        int resultWidth = matrix.length - filter.length + 1;
-        int resultHeight = matrix[0].length - filter[0].length + 1;
-        double[][] output = new double[resultWidth][resultHeight];
-
-        for(int i = 0; i < resultWidth; i++){
-            for(int j = 0; j < resultHeight; j++){
-               output[i][j] = convolvePixel(matrix, filter, i, j);
-            }
-        }
-        return output;
-    }
-
-    /**
      * Convolves a 2D matrix with a 2D filter with padding
      * @param matrix - the 2D matrix representing an image
      * @param filter - the filter kernel
@@ -355,28 +388,6 @@ public class LeNet5 {
         for(int i = 0; i < outputWidth + horizontalPadding - filter.length + 1; i++){
             for(int j = 0; j < outputHeight + horizontalPadding - filter[0].length + 1; j++){
                 output[i][j] = convolvePixel(paddedMatrix, filter, i, j) + bias;
-            }
-        }
-        return output;
-    }
-
-    /**
-     * Convolves a 2D matrix with a 2D filter with a stride greater than 1
-     * @param matrix - the 2D matrix representing an image
-     * @param filter - the filter kernel
-     * @param bias - the trainable bias associated with the convolution
-     * @param horizontalStride - the horizontal stride of the convolution
-     * @param verticalStride - the vertical stride of the convolution
-     * @return - the double[][] array of the new image after convolution
-     */
-    private double[][] convolveStrided(double[][] matrix, double[][] filter, double bias, int horizontalStride, int verticalStride){
-        int resultWidth = (matrix.length - filter.length + horizontalStride)/horizontalStride;
-        int resultHeight = (matrix[0].length - filter[0].length + verticalStride)/verticalStride;
-        double[][] output = new double[resultWidth][resultHeight];
-
-        for(int i = 0; i < resultWidth; i++){
-            for(int j = 0; j < resultHeight; j++){
-                output[i][j] = convolvePixel(matrix, filter, i*horizontalStride, j*verticalStride) + bias;
             }
         }
         return output;
@@ -409,6 +420,7 @@ public class LeNet5 {
                         }
                     }
                     //Multiply the average by the pooled weight at that point and add biases
+                    //TODO: Implement tanh activation on the final output
                     output[m][i][j] = (output[m][i][j]/(poolWidth*poolHeight)) * poolingWeights[m] + biases[m];
                 }
             }
@@ -452,7 +464,7 @@ public class LeNet5 {
      * of either -1 or 1 (USED TO INITIALIZE OUTPUT WEIGHTS)
      * @param outputWeights - the weight array to be initialized
      */
-    public void initializeWeights(double[][] outputWeights){
+    public void initializeOutputWeights(double[][] outputWeights){
         for(int i = 0; i < outputWeights.length; i++){
             for(int j = 0; j < outputWeights[i].length; j++){
                 outputWeights[i][j] = Math.random() > 0.5 ? 1 : -1;
@@ -485,10 +497,9 @@ public class LeNet5 {
      */
     public static void displayImage(double[]image, int size, String name) {
         JFrame window = new JFrame(name);
-        int width = size;
-        int height = size;
-        window.setSize((width+2)*16, (height+2)*16 + 20);
-        PixelGrid pGrid = drawImage(image, width, height);
+        int width = size > 40 ? 40 : size;
+        window.setSize((width+2)*16, 100);
+        PixelGrid pGrid = drawImage(image, width, 1);
         window.add(pGrid);
         window.setVisible(true);
         window.repaint();
@@ -503,10 +514,8 @@ public class LeNet5 {
      */
     public static void displayImage(double[][]image, int size, String name) {
         JFrame window = new JFrame(name);
-        int width = size;
-        int height = size;
-        window.setSize((width+2)*16, (height+2)*16 + 20);
-        PixelGrid pGrid = drawImage(image, width, height);
+        window.setSize((size+2)*16, (size+2)*16 + 20);
+        PixelGrid pGrid = drawImage(image, size, size);
         window.add(pGrid);
         window.setVisible(true);
         window.repaint();
@@ -551,6 +560,9 @@ public class LeNet5 {
         return grid;
     }
 
+    /**
+     * Initializes the weights in a simple manner to demonstrate functionality
+     */
     public void initializeTestWeightsSimple(){
         //Initialize filters to have a center of 1 and C5, F6, and Output weights to 1
         for(int f = 0; f < c1Filters.length; f++) {
@@ -575,7 +587,9 @@ public class LeNet5 {
             c5Biases[i] = 1.0;
         }
         for(int i = 0; i < f6Weights.length; i++){
-            f6Weights[i] = 1.0;
+            for(int j = 0; j < f6Weights[i].length; j++){
+                f6Weights[i][j] = 1.0;
+            }
         }
         for(int i = 0; i < f6Biases.length; i++){
             f6Biases[i] = 1.0;

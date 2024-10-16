@@ -104,6 +104,57 @@ public class LeNet5 {
         double[][][] s2 = new double[s2Size][s2Width][s2Height];
         s2 = pool(c1, s2Weights, s2Biases, 2, 2, 2);
         displayImage(s2[0], 14, "S2");
+
+        //C3
+        double[][][] c3 = new double[c3Size][c3Width][c3Height];
+        //First 6 filters (0..5)
+        for(int f = 0; f < 6; f++){
+            for(int i = 0; i < c3Width; i++){
+                for(int j = 0; j < c3Height; j++){
+                    c3[f][i][j] = convolvePixel(s2[f%s2Size], c3Filters[f], i, j)
+                            + convolvePixel(s2[(f+1)%s2Size], c3Filters[f], i, j)
+                            + convolvePixel(s2[(f+2)%s2Size], c3Filters[f], i, j)
+                            + c3Biases[f];
+                }
+            }
+        }
+        //Next 9 Filters (6..11)
+        for(int f = 6; f < 12; f++){
+            for(int i = 0; i < c3Width; i++){
+                for(int j = 0; j < c3Height; j++){
+                    c3[f][i][j] = convolvePixel(s2[(f-6)%s2Size], c3Filters[f], i, j)
+                            + convolvePixel(s2[(f-5)%s2Size], c3Filters[f], i, j)
+                            + convolvePixel(s2[(f-4)%s2Size], c3Filters[f], i, j)
+                            + convolvePixel(s2[(f-3)%s2Size], c3Filters[f], i, j)
+                            + c3Biases[f];
+                }
+            }
+        }
+        //Next 3 Filters (12..14)
+        for(int f = 12; f < 15; f++){
+            for(int i = 0; i < c3Width; i++){
+                for(int j = 0; j < c3Height; j++){
+                    c3[f][i][j] = convolvePixel(s2[(f-12)%s2Size], c3Filters[f], i, j)
+                            + convolvePixel(s2[(f-11)%s2Size], c3Filters[f], i, j)
+                            + convolvePixel(s2[(f-9)%s2Size], c3Filters[f], i, j)
+                            + convolvePixel(s2[(f-8)%s2Size], c3Filters[f], i, j)
+                            + c3Biases[f];
+                }
+            }
+        }
+        //Last Filter (15)
+        for(int i = 0; i < c3Width; i++){
+            for(int j = 0; j < c3Height; j++){
+                for(int f = 0; f < 6; f++){
+                    c3[15][i][j] += convolvePixel(s2[f], c3Filters[15], i, j);
+                }
+            }
+        }
+        displayImage(c3[0], 10, "C3");
+
+        //S4: Pooling of the 16 matrices from C3 into 16 5x5 matrices using 2x2 filters with 2-bit stride
+        double[][][] s4 = pool(c3, s4Weights, s4Biases, 2, 2, 2);
+        displayImage(s4[0], 5, "S4");
     }
 
     /**
@@ -129,32 +180,71 @@ public class LeNet5 {
                 }
 
                 //S2: Pooling of the 6 matrices form C1 into 14x14 matrices using 6 2x2 filters with 2-bit stride
-                double[][][] s2 = new double[s2Size][s2Width][s2Height];
-                s2 = pool(c1, s2Weights, s2Biases, 2, 2, 2);
+                double[][][] s2 = pool(c1, s2Weights, s2Biases, 2, 2, 2);
 
                 //C3: Convolution of the 6 matrices in S2 into 16 10x10 matrices using 16 5x5 filters with 2-bit stride
-                /**
+                /*
                  *   0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
                  * 0 X       X X X     X X  X  X     X  X
                  * 1 X X       X X X     X  X  X  X     X
                  * 2 X X X       X X X      X     X  X  X
                  * 3   X X X     X X X X       X     X  X
                  * 4     X X X     X X X X     X  X     X
-                 * 5       X X X     X X X X      X  X  X
+                 * 5       X X X     X X X  X     X  X  X
                  */
                 double[][][] c3 = new double[c3Size][c3Width][c3Height];
                 //First 6 filters (0..5)
                 for(int f = 0; f < 6; f++){
                     for(int i = 0; i < c3Width; i++){
                         for(int j = 0; j < c3Height; j++){
-                            c3[f][i][j] = convolvePixel(c3[f%6], c3Filters[f], i*2, j*2)
-                                            + convolvePixel(c3[(f+1)%6], c3Filters[f], i*2, j*2)
-                                            + convolvePixel(c3[(f+2)%6], c3Filters[f], i*2, j*2)
+                            c3[f][i][j] = convolvePixel(s2[f%s2Size], c3Filters[f], i, j)
+                                            + convolvePixel(s2[(f+1)%s2Size], c3Filters[f], i, j)
+                                            + convolvePixel(s2[(f+2)%s2Size], c3Filters[f], i, j)
                                             + c3Biases[f];
                         }
                     }
                 }
-                //Second
+                //Next 9 Filters (6..11)
+                for(int f = 6; f < 12; f++){
+                    for(int i = 0; i < c3Width; i++){
+                        for(int j = 0; j < c3Height; j++){
+                            c3[f][i][j] = convolvePixel(s2[(f-6)%s2Size], c3Filters[f], i, j)
+                                          + convolvePixel(s2[(f-5)%s2Size], c3Filters[f], i, j)
+                                          + convolvePixel(s2[(f-4)%s2Size], c3Filters[f], i, j)
+                                          + convolvePixel(s2[(f-3)%s2Size], c3Filters[f], i, j)
+                                          + c3Biases[f];
+                        }
+                    }
+                }
+                //Next 3 Filters (12..14)
+                for(int f = 12; f < 15; f++){
+                    for(int i = 0; i < c3Width; i++){
+                        for(int j = 0; j < c3Height; j++){
+                            c3[f][i][j] = convolvePixel(s2[(f-12)%s2Size], c3Filters[f], i, j)
+                                          + convolvePixel(s2[(f-11)%s2Size], c3Filters[f], i, j)
+                                          + convolvePixel(s2[(f-9)%s2Size], c3Filters[f], i, j)
+                                          + convolvePixel(s2[(f-8)%s2Size], c3Filters[f], i, j)
+                                          + c3Biases[f];
+                        }
+                    }
+                }
+                //Last Filter (15)
+                for(int i = 0; i < c3Width; i++){
+                    for(int j = 0; j < c3Height; j++){
+                        for(int f = 0; f < 6; f++){
+                            c3[15][i][j] += convolvePixel(s2[f], c3Filters[15], i, j);
+                        }
+                    }
+                }
+
+                //S4: Pooling of the 16 matrices from C3 into 16 5x5 matrices using 2x2 filters with 2-bit stride
+                double[][][] s4 = pool(c3, s4Weights, s4Biases, 2, 2, 2);
+
+                //C5: Convolution of 16 matrices from S4 into a single 120-node array using 16 5x5 filters and 120 additional weights
+                double[] c5 = new double[c5Size];
+                for(int f = 0; f < c5Size; f++){
+
+                }
 
 
             }
@@ -166,7 +256,9 @@ public class LeNet5 {
 
     /**
      * The CNNet's activation function according to the paper found at
-     * https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=726791
+     * <a href="https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=726791">
+     *     Gradient-Based Learning Applied to Document Recognition by Yann LeCun et al
+     * </a>
      * @param input - the input to the node
      * @return - the activation of the node
      */
@@ -175,16 +267,6 @@ public class LeNet5 {
         double tanhInput = tanOriginSlope * sigmoid(input);
         //The activation function is a tanh function multiplied by a programmer-specified amplitude
         return tanAmplitude * ((Math.exp(tanhInput)-Math.exp(-tanhInput))/(Math.exp(tanhInput)+Math.exp(-tanhInput)));
-    }
-
-    /**
-     * The derivative of the tanh activation function
-     * @param activation - the activation value of the node
-     * @return - the double derivative of the activation
-     */
-    private double derivative(double activation){
-        //Based on the derivative of tanh: 1-(tanh^2)
-        return 1 - activation * activation;
     }
 
     /**
@@ -301,9 +383,9 @@ public class LeNet5 {
     }
 
     /**
-     * Puts a set of matrices through a pooling function by summing the values of the matrix inside of the
-     * pooling grid, then multiplying by a trainable weight and adding a trainable bias, then using a
-     * sigmoid activation on the outcome. Used for the pooling layers of the CNN
+     * Puts a set of matrices through an averagepooling function by summing the values of the matrix inside the
+     * pooling grid, then taking the average and multiplying that by a trainable weight and adding a trainable bias,
+     * Used for the pooling layers of the CNN
      * @param matrices - the set of matrices to be pooled
      * @param poolingWeights - the trainable weights the sums are multiplied by
      * @param biases - the trainable biases added to the multiplied sums
@@ -326,8 +408,8 @@ public class LeNet5 {
                             output[m][i][j] += matrices[m][i*stride+k][j*stride+l];
                         }
                     }
-                    //Multiply the sum by the pooled weight at that point and apply a sigmoid activation to all of it
-                    output[m][i][j] = sigmoid(output[m][i][j] * poolingWeights[m] + biases[m]);
+                    //Multiply the average by the pooled weight at that point and add biases
+                    output[m][i][j] = (output[m][i][j]/(poolWidth*poolHeight)) * poolingWeights[m] + biases[m];
                 }
             }
         }
@@ -479,6 +561,12 @@ public class LeNet5 {
         }
         for(int f = 0; f < c5Filters.length; f++) {
             c5Filters[f][2][2] = 1.0;
+        }
+        for(int i = 0; i < s2Weights.length; i++){
+            s2Weights[i] = 1.0;
+        }
+        for(int i = 0; i < s4Weights.length; i++){
+            s4Weights[i] = 1.0;
         }
         for(int i = 0; i < c5Weights.length; i++){
             c5Weights[i] = 1.0;

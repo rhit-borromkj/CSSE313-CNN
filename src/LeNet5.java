@@ -1,43 +1,45 @@
 import javax.swing.*;
 
 public class LeNet5 {
+
+    //Programmer-defined constants
     private final double tanAmplitude = 1.7159;
     private final double tanOriginSlope = (2/3.0);
     private double trainingSetSize = 0;
-    private double learningRate = 0.1; 	// Programmer determined
+    private double learningRate = 0.1;
     private int inputSize = 28*28; 	// Fixed for now.
     private double inputs[][][];
     private double desiredOutputs[]; // Single desired output
     private final int filterWidth = 5; // Filter width for all convolution layers
     private final int filterHeight = 5; // Filter height for all convolution layers
-    private final int c1Size = 6; // Programmer determined
+    private final int c1Size = 6;
+    private final int c1Width = 28;
+    private final int c1Height = 28;
+    private final int s2Size = 6;
+    private final int s2Width = 14;
+    private final int s2Height = 14;
+    private final int c3Size = 16;
+    private final int c3Width = 10;
+    private final int c3Height = 10;
+    private final int s4Size = 16;
+    private final int c5Size = 120;
+    private final int f6Size = 84;
+    private final int outputSize = 10;
+
+    //Weight Matrices
     private double[][][] c1Filters;
     private double[] c1Biases;
-    private final int c1Width = 28; //Programmer determined
-    private final int c1Height = 28; //Programmer determined
-    private final int s2Size = 6; // Programmer determined
     private double[] s2Weights;
     private double[] s2Biases;
-    private final int s2Width = 14; // Programmer determined
-    private final int s2Height = 14;
-    private final int c3Size = 16; // Programmer determined
     private double[][][] c3Filters;
     private double[] c3Biases;
-    private final int c3Width = 10; // Programmer determined
-    private final int c3Height = 10; // Programmer determined
-    private final int s4Size = 16; // Programmer determined
     private double[] s4Weights;
     private double[] s4Biases;
-    private final int s4Width = 5; // Programmer determined;
-    private final int s4Height = 5; // Programmer determined
-    private final int c5Size = 120; // Programmer determined
     private double[][][] c5Filters;
     private double[] c5Weights;
     private double[] c5Biases;
-    private final int f6Size = 84; // Programmer determined
     private double[][] f6Weights;
     private double[] f6Biases;
-    private final int outputSize = 10; // Programmer determined
     private double[][] outputWeights;
 
     /**
@@ -204,6 +206,7 @@ public class LeNet5 {
     public void trainNetwork(int epochs){
         for(int e = 0; e < epochs; e++){
             for (int t = 0; t < trainingSetSize; t++) {
+                //TODO: Implement tanh activation on all layers up to F6
 
                 //Translate the desired output digit into a binary-encoded array
                 double[] binaryDesiredOutput = binaryEncodeSolution(desiredOutputs[t]);
@@ -387,6 +390,7 @@ public class LeNet5 {
         //Convolve the matrix
         for(int i = 0; i < outputWidth + horizontalPadding - filter.length + 1; i++){
             for(int j = 0; j < outputHeight + horizontalPadding - filter[0].length + 1; j++){
+                //TODO: Implement tanh activation on the convolved pixel
                 output[i][j] = convolvePixel(paddedMatrix, filter, i, j) + bias;
             }
         }
@@ -394,7 +398,7 @@ public class LeNet5 {
     }
 
     /**
-     * Puts a set of matrices through an averagepooling function by summing the values of the matrix inside the
+     * Puts a set of matrices through an average pooling function by summing the values of the matrix inside the
      * pooling grid, then taking the average and multiplying that by a trainable weight and adding a trainable bias,
      * Used for the pooling layers of the CNN
      * @param matrices - the set of matrices to be pooled
@@ -420,7 +424,7 @@ public class LeNet5 {
                         }
                     }
                     //Multiply the average by the pooled weight at that point and add biases
-                    //TODO: Implement tanh activation on the final output
+                    //TODO: Sigmoid??? The activation
                     output[m][i][j] = (output[m][i][j]/(poolWidth*poolHeight)) * poolingWeights[m] + biases[m];
                 }
             }

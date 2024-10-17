@@ -6,7 +6,7 @@ public class LeNet5 {
     private final double tanAmplitude = 1.7159;
     private final double tanOriginSlope = (2/3.0);
     private double trainingSetSize = 0;
-    private double learningRate = 0.1;
+    private final double learningRate = 0.1;
     private int inputSize = 28*28; 	// Fixed for now.
     private double inputs[][][];
     private double desiredOutputs[]; // Single desired output
@@ -19,6 +19,7 @@ public class LeNet5 {
     private final int s2Width = 14;
     private final int s2Height = 14;
     private final int c3Size = 16;
+    private final int c3FilterNum = 60;
     private final int c3Width = 10;
     private final int c3Height = 10;
     private final int s4Size = 16;
@@ -62,7 +63,7 @@ public class LeNet5 {
         this.c1Biases = new double[c1Size];
         this.s2Weights = new double[s2Size];
         this.s2Biases = new double[s2Size];
-        this.c3Filters = new double[c3Size][filterWidth][filterHeight];
+        this.c3Filters = new double[c3FilterNum][filterWidth][filterHeight];
         this.c3Biases = new double[c3Size];
         this.s4Weights = new double[s4Size];
         this.s4Biases = new double[s4Size];
@@ -74,6 +75,7 @@ public class LeNet5 {
         this.outputWeights = new double[outputSize][f6Size];
 
         //Initialize weights
+        //TODO: Uncomment for milestone 2
 //        initializeWeights(this.c1Filters, inputSize);
 //        initializeWeights(this.c1Biases, inputSize);
 //        initializeWeights(this.s2Weights, c1Width*c1Height);
@@ -91,110 +93,6 @@ public class LeNet5 {
     }
 
     /**
-     * Does a simple test of the network using set weights and no activation functions
-     * to demonstrate the functionality. To make things easier to call, the
-     * displayImage methods are in this class, but these will be removed
-     * for Milestone 2
-     */
-    public void testNetworkSimple(){
-        initializeTestWeightsSimple();
-        double[] binaryDesiredOutput = binaryEncodeSolution(desiredOutputs[0]);
-        displayImage(inputs[0], 28, "Input");
-
-        //C1
-        double[][][] c1 = new double[c1Size][c1Width][c1Height];
-        for(int f = 0; f < c1Filters.length; f++){
-            c1[f] = convolvePadded(inputs[0], c1Filters[f], c1Biases[f], c1Width, c1Height);
-        }
-        displayImage(c1[0], 28, "C1");
-
-        //S2
-        double[][][] s2 = new double[s2Size][s2Width][s2Height];
-        s2 = pool(c1, s2Weights, s2Biases, 2, 2, 2);
-        displayImage(s2[0], 14, "S2");
-
-        //C3
-        double[][][] c3 = new double[c3Size][c3Width][c3Height];
-        //First 6 filters (0..5)
-        for(int f = 0; f < 6; f++){
-            for(int i = 0; i < c3Width; i++){
-                for(int j = 0; j < c3Height; j++){
-                    c3[f][i][j] = convolvePixel(s2[f%s2Size], c3Filters[f], i, j)
-                            + convolvePixel(s2[(f+1)%s2Size], c3Filters[f], i, j)
-                            + convolvePixel(s2[(f+2)%s2Size], c3Filters[f], i, j)
-                            + c3Biases[f];
-                }
-            }
-        }
-        //Next 9 Filters (6..11)
-        for(int f = 6; f < 12; f++){
-            for(int i = 0; i < c3Width; i++){
-                for(int j = 0; j < c3Height; j++){
-                    c3[f][i][j] = convolvePixel(s2[(f-6)%s2Size], c3Filters[f], i, j)
-                            + convolvePixel(s2[(f-5)%s2Size], c3Filters[f], i, j)
-                            + convolvePixel(s2[(f-4)%s2Size], c3Filters[f], i, j)
-                            + convolvePixel(s2[(f-3)%s2Size], c3Filters[f], i, j)
-                            + c3Biases[f];
-                }
-            }
-        }
-        //Next 3 Filters (12..14)
-        for(int f = 12; f < 15; f++){
-            for(int i = 0; i < c3Width; i++){
-                for(int j = 0; j < c3Height; j++){
-                    c3[f][i][j] = convolvePixel(s2[(f-12)%s2Size], c3Filters[f], i, j)
-                            + convolvePixel(s2[(f-11)%s2Size], c3Filters[f], i, j)
-                            + convolvePixel(s2[(f-9)%s2Size], c3Filters[f], i, j)
-                            + convolvePixel(s2[(f-8)%s2Size], c3Filters[f], i, j)
-                            + c3Biases[f];
-                }
-            }
-        }
-        //Last Filter (15)
-        for(int i = 0; i < c3Width; i++){
-            for(int j = 0; j < c3Height; j++){
-                for(int f = 0; f < 6; f++){
-                    c3[15][i][j] += convolvePixel(s2[f], c3Filters[15], i, j);
-                }
-            }
-        }
-        displayImage(c3[0], 10, "C3");
-
-        //S4: Pooling of the 16 matrices from C3 into 16 5x5 matrices using 2x2 filters with 2-bit stride
-        double[][][] s4 = pool(c3, s4Weights, s4Biases, 2, 2, 2);
-        displayImage(s4[0], 5, "S4");
-
-        //C5
-        double[] c5 = new double[c5Size];
-        for(int f = 0; f < c5Size; f++){
-            for(int s = 0; s < s4Size; s++){
-                c5[f] += convolvePixel(s4[s], c5Filters[f], 0, 0);
-            }
-            c5[f] = c5[f] * c5Weights[f] + c5Biases[f];
-        }
-        displayImage(c5, 120, "C5");
-
-        //F6
-        double[] f6 = new double[f6Size];
-        for(int h = 0; h < f6Size; h++){
-            for(int n = 0; n < c5Size; n++){
-                f6[h] += c5[n] * f6Weights[h][n];
-            }
-            f6[h] += f6Biases[h];
-        }
-        displayImage(f6, 84, "F6");
-
-        //Output
-        double[] output = new double[outputSize];
-        for(int o = 0; o < outputSize; o++){
-            for(int h = 0; h < f6Size; h++){
-                output[o] += f6[h] * outputWeights[o][h];
-            }
-        }
-        displayImage(output, 10, "Output");
-    }
-
-    /**
      * Trains the network the epoch number of times using Convolutional artificial
      * intelligence methods. There are 8 layers in the network: input layer, 3 convolutional
      * layers, 2 pooling layers, a feed-forward hidden layer, then an output layer. The
@@ -205,78 +103,94 @@ public class LeNet5 {
      */
     public void trainNetwork(int epochs){
         for(int e = 0; e < epochs; e++){
-            for (int t = 0; t < trainingSetSize; t++) {
-                //TODO: Implement tanh activation on all layers up to F6
+//            for (int t = 0; t < trainingSetSize; t++) {
+                int t = 0;
+                //TODO: Delete for milestone 2
+                initializeTestWeightsSimple();
 
                 //Translate the desired output digit into a binary-encoded array
                 double[] binaryDesiredOutput = binaryEncodeSolution(desiredOutputs[t]);
+                displayImage(inputs[0], 28, "Input");
+
 
                 //C1: Padded convolution of the input from a 32 x 32 to 28 x 28 using 5 x 5 filter with 1-bit stride
                 double[][][] c1 = new double[c1Size][c1Width][c1Height];
-                for(int f = 0; f < c1Filters.length; f++){
+                for(int f = 0; f < c1Filters.length; f++) {
                     c1[f] = convolvePadded(inputs[t], c1Filters[f], c1Biases[f], c1Width, c1Height);
                 }
+                displayImage(c1[0], 28, "C1");
+
 
                 //S2: Pooling of the 6 matrices form C1 into 14x14 matrices using 6 2x2 filters with 2-bit stride
                 double[][][] s2 = pool(c1, s2Weights, s2Biases, 2, 2, 2);
+                displayImage(s2[0], 14, "S2");
 
-                //C3: Convolution of the 6 matrices in S2 into 16 10x10 matrices using 16 5x5 filters with 2-bit stride
+                //C3: Convolution of the 6 matrices in S2 into 16 10x10 matrices using 120 5x5 filters with 2-bit stride
                 /*
-                 *   0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-                 * 0 X       X X X     X X  X  X     X  X
-                 * 1 X X       X X X     X  X  X  X     X
-                 * 2 X X X       X X X      X     X  X  X
-                 * 3   X X X     X X X X       X     X  X
-                 * 4     X X X     X X X X     X  X     X
-                 * 5       X X X     X X X  X     X  X  X
+                 * S2 Output:   0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+                 * # of filters
+                 * applied:
+                 *              0 X       X X X     X X  X  X     X  X
+                 *              1 X X       X X X     X  X  X  X     X
+                 *              2 X X X       X X X      X     X  X  X
+                 *              3   X X X     X X X X       X     X  X
+                 *              4     X X X     X X X X     X  X     X
+                 *              5       X X X     X X X  X     X  X  X
                  */
                 double[][][] c3 = new double[c3Size][c3Width][c3Height];
+                int filter = 0;
                 //First 6 filters (0..5)
                 for(int f = 0; f < 6; f++){
                     for(int i = 0; i < c3Width; i++){
                         for(int j = 0; j < c3Height; j++){
-                            c3[f][i][j] = convolvePixel(s2[f%s2Size], c3Filters[f], i, j)
-                                    + convolvePixel(s2[(f+1)%s2Size], c3Filters[f], i, j)
-                                    + convolvePixel(s2[(f+2)%s2Size], c3Filters[f], i, j)
-                                    + c3Biases[f];
+                            c3[f][i][j] = tanh(convolvePixel(s2[f%s2Size], c3Filters[filter], i, j)
+                                    + convolvePixel(s2[(f+1)%s2Size], c3Filters[filter+1], i, j)
+                                    + convolvePixel(s2[(f+2)%s2Size], c3Filters[filter+2], i, j)
+                                    + c3Biases[f]);
                         }
                     }
+                    filter += 3;
                 }
                 //Next 9 Filters (6..11)
                 for(int f = 6; f < 12; f++){
                     for(int i = 0; i < c3Width; i++){
                         for(int j = 0; j < c3Height; j++){
-                            c3[f][i][j] = convolvePixel(s2[(f-6)%s2Size], c3Filters[f], i, j)
-                                    + convolvePixel(s2[(f-5)%s2Size], c3Filters[f], i, j)
-                                    + convolvePixel(s2[(f-4)%s2Size], c3Filters[f], i, j)
-                                    + convolvePixel(s2[(f-3)%s2Size], c3Filters[f], i, j)
-                                    + c3Biases[f];
+                            c3[f][i][j] = tanh(convolvePixel(s2[(f-6)%s2Size], c3Filters[filter], i, j)
+                                    + convolvePixel(s2[(f-5)%s2Size], c3Filters[filter+1], i, j)
+                                    + convolvePixel(s2[(f-4)%s2Size], c3Filters[filter+2], i, j)
+                                    + convolvePixel(s2[(f-3)%s2Size], c3Filters[filter+3], i, j)
+                                    + c3Biases[f]);
                         }
                     }
+                    filter += 4;
                 }
                 //Next 3 Filters (12..14)
                 for(int f = 12; f < 15; f++){
                     for(int i = 0; i < c3Width; i++){
                         for(int j = 0; j < c3Height; j++){
-                            c3[f][i][j] = convolvePixel(s2[(f-12)%s2Size], c3Filters[f], i, j)
-                                    + convolvePixel(s2[(f-11)%s2Size], c3Filters[f], i, j)
-                                    + convolvePixel(s2[(f-9)%s2Size], c3Filters[f], i, j)
-                                    + convolvePixel(s2[(f-8)%s2Size], c3Filters[f], i, j)
-                                    + c3Biases[f];
+                            c3[f][i][j] = tanh(convolvePixel(s2[(f-12)%s2Size], c3Filters[filter+1], i, j)
+                                    + convolvePixel(s2[(f-11)%s2Size], c3Filters[filter+2], i, j)
+                                    + convolvePixel(s2[(f-9)%s2Size], c3Filters[filter+3], i, j)
+                                    + convolvePixel(s2[(f-8)%s2Size], c3Filters[filter+4], i, j)
+                                    + c3Biases[f]);
                         }
                     }
+                    filter += 4;
                 }
                 //Last Filter (15)
                 for(int i = 0; i < c3Width; i++){
                     for(int j = 0; j < c3Height; j++){
                         for(int f = 0; f < 6; f++){
-                            c3[15][i][j] += convolvePixel(s2[f], c3Filters[15], i, j);
+                            c3[15][i][j] += convolvePixel(s2[f], c3Filters[filter+f], i, j) + c3Biases[f];
                         }
+                        c3[15][i][j] = tanh(c3[15][i][j]);
                     }
                 }
+                displayImage(c3[0], 10, "C3");
 
                 //S4: Pooling of the 16 matrices from C3 into 16 5x5 matrices using 2x2 filters with 2-bit stride
                 double[][][] s4 = pool(c3, s4Weights, s4Biases, 2, 2, 2);
+                displayImage(s4[0], 5, "S4");
 
                 //C5: Convolution of 16 matrices from S4 into a single 120-node array using 16 5x5 filters and 120 additional weights
                 double[] c5 = new double[c5Size];
@@ -284,8 +198,9 @@ public class LeNet5 {
                     for(int s = 0; s < s4Size; s++){
                         c5[f] += convolvePixel(s4[s], c5Filters[f], 0, 0);
                     }
-                    c5[f] = c5[f] * c5Weights[f] + c5Biases[f];
+                    c5[f] = tanh(c5[f] * c5Weights[f] + c5Biases[f]);
                 }
+                displayImage(c5, 120, "C5");
 
                 //F6: Feed-forward fully connected hidden layer with 120 inputs, 84 hidden weights per input, and 84 biases
                 double[] f6 = new double[f6Size];
@@ -295,6 +210,7 @@ public class LeNet5 {
                     }
                     f6[h] += f6Biases[h];
                 }
+                displayImage(f6, 84, "F6");
 
                 //Output: Feed-forward fully connected output layer with 84 inputs, 10 weights per input
                 double[] output = new double[outputSize];
@@ -303,7 +219,8 @@ public class LeNet5 {
                         output[o] += f6[h] * outputWeights[o][h];
                     }
                 }
-            }
+                displayImage(output, 10, "Output");
+//            }
             System.out.println("Epoch " + (e+1) + " completed.");
         }
 
@@ -320,18 +237,11 @@ public class LeNet5 {
      */
     private double tanh(double input){
         //Take the sigmoid of the input and multiply it by the slope at origin
-        double tanhInput = tanOriginSlope * sigmoid(input);
+        //TODO: Multiply sigmoided input by tanOriginSlope
+        double tanhInput = input;
         //The activation function is a tanh function multiplied by a programmer-specified amplitude
-        return tanAmplitude * ((Math.exp(tanhInput)-Math.exp(-tanhInput))/(Math.exp(tanhInput)+Math.exp(-tanhInput)));
-    }
-
-    /**
-     * A sigmoid activation function
-     * @param input - the input
-     * @return - the double sigmoid activation value
-     */
-    private double sigmoid(double input){
-        return 1/(1+Math.exp(-input));
+        //TODO: Multiply the returned value by tanAmplitude
+        return ((Math.exp(tanhInput)-Math.exp(-tanhInput))/(Math.exp(tanhInput)+Math.exp(-tanhInput)));
     }
 
     /**
@@ -347,6 +257,16 @@ public class LeNet5 {
         return activation;
     }
 
+
+    /**
+     * A sigmoid activation function
+     * @param input - the input
+     * @return - the double sigmoid activation value
+     */
+    private double sigmoid(double input){
+        return 1/(1+Math.exp(-input));
+    }
+
     /**
      * Calculates a single output of the convolution
      * @param matrix - the image to be filtered
@@ -359,7 +279,7 @@ public class LeNet5 {
         double output = 0;
         for(int i = 0; i < filter.length; i++){
             for(int j = 0; j < filter[i].length; j++){
-                output += (matrix[x+i][y+j]*filter[i][j]);
+                output += matrix[x+i][y+j] * filter[i][j];
             }
         }
         return output;
@@ -390,8 +310,7 @@ public class LeNet5 {
         //Convolve the matrix
         for(int i = 0; i < outputWidth + horizontalPadding - filter.length + 1; i++){
             for(int j = 0; j < outputHeight + horizontalPadding - filter[0].length + 1; j++){
-                //TODO: Implement tanh activation on the convolved pixel
-                output[i][j] = convolvePixel(paddedMatrix, filter, i, j) + bias;
+                output[i][j] = tanh(convolvePixel(paddedMatrix, filter, i, j) + bias);
             }
         }
         return output;
@@ -501,7 +420,7 @@ public class LeNet5 {
      */
     public static void displayImage(double[]image, int size, String name) {
         JFrame window = new JFrame(name);
-        int width = size > 40 ? 40 : size;
+        int width = Math.min(size, 40);
         window.setSize((width+2)*16, 100);
         PixelGrid pGrid = drawImage(image, width, 1);
         window.add(pGrid);
@@ -539,7 +458,7 @@ public class LeNet5 {
         int c = 0;
         for(int i = 0; i<width; i++) {
             for(int j = 0; j<height; j++) {
-                grid.setPixel(image[c++]*255,j,i);
+                grid.setPixel((int)(image[c++]*255),j,i);
             }
         }
         return grid;
@@ -558,7 +477,7 @@ public class LeNet5 {
         int c = 0;
         for(int i = 0; i<width; i++) {
             for(int j = 0; j<height; j++) {
-                grid.setPixel(image[i][j]*255,j,i);
+                grid.setPixel((int)(image[i][j]*255),j,i);
             }
         }
         return grid;
@@ -579,30 +498,43 @@ public class LeNet5 {
             c5Filters[f][2][2] = 1.0;
         }
         for(int i = 0; i < s2Weights.length; i++){
-            s2Weights[i] = 1.0;
+            s2Weights[i] = Math.random() - 0.5;
         }
         for(int i = 0; i < s4Weights.length; i++){
-            s4Weights[i] = 1.0;
+            s4Weights[i] = Math.random() - 0.5;
         }
         for(int i = 0; i < c5Weights.length; i++){
-            c5Weights[i] = 1.0;
+            c5Weights[i] = Math.random() - 0.5;
         }
         for(int i = 0; i < c5Biases.length; i++){
-            c5Biases[i] = 1.0;
+            c5Biases[i] = Math.random() - 0.5;
         }
         for(int i = 0; i < f6Weights.length; i++){
             for(int j = 0; j < f6Weights[i].length; j++){
-                f6Weights[i][j] = 1.0;
+                f6Weights[i][j] = Math.random() - 0.5;
             }
         }
         for(int i = 0; i < f6Biases.length; i++){
-            f6Biases[i] = 1.0;
+            f6Biases[i] = Math.random() - 0.5;
         }
         for(int i = 0; i < outputWeights.length; i++){
             for(int j = 0; j < outputWeights[i].length; j++){
-                outputWeights[i][j] = 1.0;
+                outputWeights[i][j] = Math.random() - 0.5;
             }
         }
+    }
+
+    private void printMatrix(double[][][] convolvedLayer) {
+        for(int i = 0; i < convolvedLayer.length; i++) {
+            for(int j = 0; j < convolvedLayer[i].length; j++) {
+                for(int k = 0; k < convolvedLayer[i][j].length; k++) {
+                    System.out.print(convolvedLayer[i][j][k] + ", ");
+                }            System.out.println();
+            }
+            if(i+1 < convolvedLayer.length)
+                System.out.println("Next Convolved Layer:");
+        }
+        System.out.println();
     }
 
 }

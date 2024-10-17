@@ -27,9 +27,10 @@ public class MNISTCNN {
         System.out.println("Training network...");
         LeNet5 net = new LeNet5();
         net.initNetwork(trainImages, trainOutputs);
-        net.testNetworkSimple();
+        net.trainNetwork(1);
 
         //Read in the testing data
+        //TODO: Uncomment for milestone 2
 //        System.out.println("Reading testing data...");
 //        double[][][] testImages = readImage("MNIST\\t10k-images-idx3-ubyte", 10000, 28, 28);
         //Read the expected outputs
@@ -67,7 +68,7 @@ public class MNISTCNN {
             for (int i = 0; i < inputImages.length; i++) {
                 for (int r = 0; r < imageWidth; r++) {
                     for(int c = 0; c < imageHeight; c++) {
-                        inputImages[i][r][c] = normalize(inputFile.read());
+                        inputImages[i][r][c] = inputFile.read()/255.0;
 
                     }
                 }
@@ -109,17 +110,6 @@ public class MNISTCNN {
             System.err.println(e);
             return null;
         }
-    }
-
-    /**
-     * Normalizes the pixel so that the background (white) has a value
-     * of -0.1 and the foreground (black) has a value of 1.175 to make
-     * training faster
-     * @param pixel - double
-     * @return the double normalized pixel
-     */
-    public static double normalize(double pixel){
-        return pixel/255.0;
     }
 
     /**
@@ -167,7 +157,7 @@ public class MNISTCNN {
         int c = 0;
         for(int i = 0; i<width; i++) {
             for(int j = 0; j<height; j++) {
-                grid.setPixel(image[c++]*255,j,i);
+                grid.setPixel((int)(image[c++]*255),j,i);
             }
         }
         return grid;
@@ -186,7 +176,7 @@ public class MNISTCNN {
         int c = 0;
         for(int i = 0; i<width; i++) {
             for(int j = 0; j<height; j++) {
-                grid.setPixel(image[i][j]*255,j,i);
+                grid.setPixel((int)(image[i][j]*255),j,i);
             }
         }
         return grid;
